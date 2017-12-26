@@ -15,17 +15,27 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JScrollPane;
 
+import project.model.Model;
+
 
 // Native construction using WindowBuilder
 
 public class TangramApplication extends JFrame {
 
+	/** Content for this Frame. */
 	JPanel contentPane;
+	
+	/** Represents model for application domain. */
+	Model model;
+	
+	/** View for Tangram pieces. */
+	PiecesView piecesView;
 	
 	/**
 	 * Create the frame.
 	 */
-	public TangramApplication() {
+	public TangramApplication(Model m) {
+		this.model = m;
 		
 		setTitle("Tangram Application");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,6 +76,11 @@ public class TangramApplication extends JFrame {
 		
 		JScrollPane tangramSetPane = new JScrollPane();
 
+		// Install PiecesView in the left scrolling panel.
+		piecesView = new PiecesView(model);
+		tangramSetPane.setViewportView(piecesView);
+				
+		
 		JScrollPane solutionSetPane = new JScrollPane();
 
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
@@ -88,6 +103,11 @@ public class TangramApplication extends JFrame {
 					.addContainerGap())
 		);
 		contentPane.setLayout(gl_contentPane);
+	}
+	
+	// Only here for WindowBuilder
+	TangramApplication() {
+		this (Model.defaultModel());
 	}
 
 }
