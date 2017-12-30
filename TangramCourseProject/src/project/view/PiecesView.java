@@ -4,14 +4,16 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.swing.JPanel;
 
-import project.model.Coordinate;
 import project.model.Model;
+import project.model.PlacedPiece;
 import project.model.TangramPiece;
 
 /**
@@ -25,8 +27,8 @@ public class PiecesView extends JPanel {
 	/** Model. */
 	Model model;
 
-	/** Pieces to be drawn. */
-	List<TangramPiece> pieces = new ArrayList<>();
+	/** Pieces to be drawn. PlacedPiece knows the TangramPiece and a designated (x,y) location. */
+	List<PlacedPiece> pieces = new ArrayList<>();
 
 	/** Size of each square. */
 	final int squareSize = 128;
@@ -42,8 +44,13 @@ public class PiecesView extends JPanel {
 	public PiecesView(Model model) {
 		this.model = model;
 		
+		// Compute PlacedPiece for each TangramPiece in set.
+		int offset_y = 0;
 		for (TangramPiece piece : model.getSet()) {
-			pieces.add(piece);
+			PlacedPiece pp = new PlacedPiece (piece, squareSize, new Point (0, offset_y));
+			pieces.add(pp);
+
+			offset_y += squareSize;
 		}
 	}
 
@@ -92,30 +99,25 @@ public class PiecesView extends JPanel {
 		repaint();
 	}
 
-	/** Redraws all pieces into offscreen image, offset by center point. */
+	/** Redraws all pieces into offscreen image, simplified by PlacedPiece. */
 	void redraw() {
-		
-		// compute and center all pieces
-		int offset_y = 0;
-		for (TangramPiece piece : pieces) {
-			
-			int[] xpoints = new int[piece.size()];
-			int[] ypoints = new int[piece.size()];
-			
-			// convert coordinate sequence into (x,y) points. 
-			int idx = 0;
-			for (Coordinate c : piece) {
-				xpoints[idx] = (int) (squareSize*c.x);
-				ypoints[idx] = (int) (offset_y + squareSize*c.y);
-				idx++;
-			}
-
-			Polygon polyshape = new Polygon(xpoints, ypoints, piece.size());
-			
+		for (PlacedPiece piece : pieces) {
+			Polygon polyshape = piece.getPolygon();
 			offScreenGraphics.setColor(Color.black);
 			offScreenGraphics.fillPolygon(polyshape);
-
-			offset_y += squareSize;
 		}
+	}
+	
+	/** Helper function to map a point to a specific PlacedPiece in our view. */
+	Optional<PlacedPiece> find (Point p) {
+		for (PlacedPiece piece : pieces) {
+			Polygon poly = piece.getPolygon();
+			
+			if (poly.contains(p)) {
+				return Optional.of(piece);
+			}
+		}
+		
+		return Optional.empty();
 	}
 }

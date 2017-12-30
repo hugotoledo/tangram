@@ -10,12 +10,17 @@ import javax.swing.KeyStroke;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Optional;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JScrollPane;
 
+import project.controller.AddPieceController;
 import project.model.Model;
+import project.model.PlacedPiece;
 
 
 // Native construction using WindowBuilder
@@ -30,6 +35,12 @@ public class TangramApplication extends JFrame {
 	
 	/** View for Tangram pieces. */
 	PiecesView piecesView;
+	
+	/** View for the solution. */
+	PuzzleView puzzleView;
+	
+	public PiecesView getPiecesView() { return piecesView; }
+	public PuzzleView getPuzzleView() { return puzzleView; }
 	
 	/**
 	 * Create the frame.
@@ -79,9 +90,23 @@ public class TangramApplication extends JFrame {
 		// Install PiecesView in the left scrolling panel.
 		piecesView = new PiecesView(model);
 		tangramSetPane.setViewportView(piecesView);
-				
+
+		// For each mouse event, locate actual piece in PiecesView and have it added to puzzle.
+		piecesView.addMouseListener(new MouseAdapter() { 
+			@Override
+			public void mousePressed(MouseEvent me) {
+				Optional<PlacedPiece> found = piecesView.find(me.getPoint());
+				if (found.isPresent()) {
+					new AddPieceController(TangramApplication.this, model).add(found.get().getPiece());
+				}
+			}
+		});
 		
 		JScrollPane solutionSetPane = new JScrollPane();
+		
+		// install PuzzleView in the right scrolling panel.
+		puzzleView = new PuzzleView(model);
+		solutionSetPane.setViewportView(puzzleView);
 
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
@@ -110,4 +135,5 @@ public class TangramApplication extends JFrame {
 		this (Model.defaultModel());
 	}
 
+	
 }
